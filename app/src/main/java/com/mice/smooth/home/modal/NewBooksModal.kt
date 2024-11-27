@@ -1,18 +1,31 @@
 package com.mice.smooth.home.modal
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.mice.smooth.api.ApiResponse
 import com.mice.smooth.api.Book
 import com.mice.smooth.api.RetrofitClient
 import com.mice.smooth.home.NewBookItem
+import com.mice.smooth.util.TokenUtil
 import retrofit2.Response
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -21,9 +34,18 @@ fun NewBooksModal(onDismiss: () -> Unit, navController: NavController) {
     val books = remember { mutableStateOf<List<Book>>(emptyList()) }
     val isLoading = remember { mutableStateOf(true) }
     val errorMessage = remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    val tokenUtil = TokenUtil()
+    val token = tokenUtil.getAccessTokenFromPreferences(context)
     LaunchedEffect(Unit) {
         try {
-            val response: Response<ApiResponse<List<Book>>> = RetrofitClient.apiService.getNewBooks(page = 1, size = 8)
+            val response: Response<ApiResponse<List<Book>>> =
+                RetrofitClient
+                    .apiService
+                    .getNewBooks(
+                        token!!,
+                        page = 1, size = 8
+                    )
             if (response.isSuccessful) {
                 val apiResponse = response.body()
                 if (apiResponse?.code == 200) {

@@ -1,6 +1,5 @@
 package com.mice.smooth.home.screen
 
-import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,7 +31,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,12 +46,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.rememberPagerState
+import com.google.accompanist.pager.PagerState
 import com.mice.smooth.api.ApiResponse
 import com.mice.smooth.api.Chapter
 import com.mice.smooth.api.RetrofitClient
-import com.mice.smooth.util.removeKeyEventListener
-import com.mice.smooth.util.setKeyEventListener
 import kotlinx.coroutines.launch
 import retrofit2.Response
 
@@ -63,11 +59,10 @@ fun BookDetailScreen(
     navController: NavController,
     name: String,
     bookId: Int,
-    onShowNewBooksChange: (Boolean) -> Unit
+    pagerState: PagerState // 传递 pagerState
 ) {
     val coroutineScope = rememberCoroutineScope()
     val chapters = remember { mutableStateOf<List<Chapter>>(emptyList()) }
-    val pagerState = rememberPagerState()
     val context = LocalContext.current
     val activity = remember { context as? ComponentActivity }
     val isLoading = remember { mutableStateOf(true) }
@@ -94,44 +89,6 @@ fun BookDetailScreen(
             isLoading.value = false
         }
     }
-
-
-    DisposableEffect(activity) {
-        activity?.setKeyEventListener { event ->
-            when (event.keyCode) {
-                KeyEvent.KEYCODE_VOLUME_UP -> {
-                    coroutineScope.launch {
-                        if (pagerState.currentPage > 0) {
-                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                        }
-                    }
-                    true
-                }
-                KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                    coroutineScope.launch {
-                        if (pagerState.currentPage < chapters.value.size - 1) {
-                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                        }
-                    }
-                    true
-                }
-                KeyEvent.KEYCODE_BACK -> {
-                    onShowNewBooksChange(true) // 在返回时将 showNewBooks 设置为 true
-                    navController.popBackStack()
-                    true
-                }
-                else -> false
-            }
-        }
-
-        onDispose {
-            activity?.removeKeyEventListener()
-        }
-    }
-
-
-
-
 
     ModalNavigationDrawer(
         drawerContent = {

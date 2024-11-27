@@ -50,10 +50,13 @@ android {
 }
 
 dependencies {
+
+
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.9.3")
 //    implementation ("androidx.compose.foundation:foundation")
     implementation("com.google.accompanist:accompanist-pager:0.24.13-rc")
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation ("io.coil-kt:coil-compose:2.2.2")
     implementation ("androidx.navigation:navigation-compose:2.5.3")
     implementation ("androidx.compose.material:material-icons-extended:1.4.0")

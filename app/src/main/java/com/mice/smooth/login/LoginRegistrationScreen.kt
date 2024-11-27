@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -24,6 +25,7 @@ fun LoginRegistrationScreen(
     authViewModel: AuthViewModel = viewModel(),
     onLoginSuccess: () -> Unit
 ) {
+    val context = LocalContext.current
     var showPassword by remember { mutableStateOf(false) }
     val isLoginMode by authViewModel.isLoginMode.collectAsState()
     val email by authViewModel.email.collectAsState()
@@ -31,7 +33,6 @@ fun LoginRegistrationScreen(
     val confirmPassword by authViewModel.confirmPassword.collectAsState()
     val isLoading by authViewModel.isLoading.collectAsState()
     val errorMessage by authViewModel.errorMessage.collectAsState()
-
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -137,9 +138,22 @@ fun LoginRegistrationScreen(
             Button(
                 onClick = {
                     if (isLoginMode) {
-                        authViewModel.login(onLoginSuccess)
+                        authViewModel.loginUser(
+                            context = context,
+                            onSuccess = {
+                                onLoginSuccess() // 登录成功后调用回调
+                            },
+                            onError = { errorMessage ->
+                                authViewModel.setErrorMessage(errorMessage)
+                            }
+                        )
                     } else {
-                        authViewModel.register(onLoginSuccess)
+                        authViewModel.registerUser(
+                            onSuccess = { authViewModel.toggleMode() },
+                            onError = { errorMessage ->
+                                authViewModel.setErrorMessage(errorMessage)
+                            }
+                        )
                     }
                 },
                 modifier = Modifier

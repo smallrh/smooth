@@ -1,8 +1,15 @@
 package com.mice.smooth.login
 
+import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.mice.smooth.api.RetrofitClient
+import com.mice.smooth.api.UserBodyRequest
+import com.mice.smooth.util.TokenUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
     private val _email = MutableStateFlow("")
@@ -22,6 +29,7 @@ class AuthViewModel : ViewModel() {
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage = _errorMessage.asStateFlow()
+    private val tokenUtil = TokenUtil()
 
     fun updateEmail(newEmail: String) {
         _email.value = newEmail
@@ -43,34 +51,63 @@ class AuthViewModel : ViewModel() {
         _errorMessage.value = null
     }
 
-    fun login(onSuccess: () -> Unit) {
+    fun loginUser(context: Context, onSuccess: () -> Unit, onError: (String) -> Unit) {
         _isLoading.value = true
-        // 模拟网络请求
-        // 实际应用中，这里应该调用真实的登录 API
-        if (_email.value.isNotBlank() && _password.value.isNotBlank()) {
-            // 登录成功
-            _isLoading.value = false
-            onSuccess()
-        } else {
-            // 登录失败
-            _isLoading.value = false
-            _errorMessage.value = "邮箱或密码不能为空"
+        val request = UserBodyRequest(_email.value, _password.value)
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.login(request)
+                if (response.isSuccessful) {
+                    // 从响应头中获取 Token
+                    val accessToken = response.headers()["Access-Token"]
+                    val refreshToken = response.headers()["Refresh-Token"]
+
+                    if (accessToken != null && refreshToken != null) {
+                        // 存储 Token 到本地
+                        tokenUtil.saveAccessTokenToPreferences(context, accessToken)
+                        tokenUtil.saveRefreshTokenToPreferences(context, refreshToken)
+                        onSuccess() // 登录成功后调用 onSuccess
+                    } else {
+                        onError("登录失败，未收到 Token")
+                    }
+                } else {
+                    onError("登录失败，账号或密码错误")
+                }
+            } catch (e: Exception) {
+                Log.e("LoginError", "Exception during login: ${e.localizedMessage}", e)
+                onError("网络错误: ${e.localizedMessage}")
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 
-    fun register(onSuccess: () -> Unit) {
+
+    fun registerUser(onSuccess: () -> Unit, onError: (String) -> Unit) {
         _isLoading.value = true
-        // 模拟网络请求
-        // 实际应用中，这里应该调用真实的注册 API
-        if (_email.value.isNotBlank() && _password.value.isNotBlank() && _password.value == _confirmPassword.value) {
-            // 注册成功
-            _isLoading.value = false
-            onSuccess()
-        } else {
-            // 注册失败
-            _isLoading.value = false
-            _errorMessage.value = "请确保所有字段都已填写，且两次输入的密码相同"
+        val request = UserBodyRequest(_email.value, _password.value)
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.register(request)
+                if (response.isSuccessful) {
+                    val apiResponse = response.body()
+                    if (apiResponse?.code == 200) {
+                        onSuccess()
+                    } else {
+                        onError(apiResponse?.message ?: "注册失败")
+                    }
+                } else {
+                    onError("注册失败: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                onError("网络错误: ${e.localizedMessage}")
+            } finally {
+                _isLoading.value = false
+            }
         }
+    }
+
+    fun setErrorMessage(errorMessage: String) {
+        _errorMessage.value = errorMessage
     }
 }
-
