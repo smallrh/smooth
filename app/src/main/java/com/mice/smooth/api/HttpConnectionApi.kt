@@ -1,6 +1,5 @@
 package com.mice.smooth.api
 
-import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -40,7 +39,6 @@ data class UserBodyRequest(
 
 data class LoginResponse(
     val access_token: String,
-    val refresh_token: String
 )
 
 interface HttpConnectionApi {
@@ -49,12 +47,20 @@ interface HttpConnectionApi {
 
     @GET("getTopEightBooks")
     suspend fun getHighRatedBooks(
+        @Header("Token") token: String,
         @Query("page") page: Int,
         @Query("size") size: Int
     ): Response<ApiResponse<List<Book>>>
 
     @GET("getNewBooks")
     suspend fun getNewBooks(
+        @Header("Token") token: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<ApiResponse<List<Book>>>
+
+    @GET("getHotBooks")
+    suspend fun getHotBooks(
         @Header("Token") token: String,
         @Query("page") page: Int,
         @Query("size") size: Int
@@ -67,4 +73,15 @@ interface HttpConnectionApi {
     @Headers("Content-Type: application/json")
     @POST("/login")
     suspend fun login(@Body request: UserBodyRequest): Response<LoginResponse>
+
+    @Headers("Content-Type: application/json")
+    @POST("/refresh-token")
+    suspend fun refreshToken(@Header("Token") refresh_token: String): Response<ApiResponse<LoginResponse>>
+
+    @GET("getGreatestBooks")
+    suspend fun getGreatestBooks(
+        @Header("Token") token: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<ApiResponse<List<Book>>>
 }

@@ -61,14 +61,15 @@ class AuthViewModel : ViewModel() {
                     // 从响应头中获取 Token
                     val accessToken = response.headers()["Access-Token"]
                     val refreshToken = response.headers()["Refresh-Token"]
-
+                    Log.d("Login", "Received access token: $accessToken")
+                    Log.d("Login", "Received refresh token: $refreshToken")
                     if (accessToken != null && refreshToken != null) {
                         // 存储 Token 到本地
                         tokenUtil.saveAccessTokenToPreferences(context, accessToken)
                         tokenUtil.saveRefreshTokenToPreferences(context, refreshToken)
                         onSuccess() // 登录成功后调用 onSuccess
                     } else {
-                        onError("登录失败，未收到 Token")
+                        onError("登录失败，网络错误")
                     }
                 } else {
                     onError("登录失败，账号或密码错误")

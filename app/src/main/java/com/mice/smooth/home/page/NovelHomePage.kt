@@ -12,16 +12,14 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NovelHomePage(
-    modifier: Modifier = Modifier,
     onOpenRankings: () -> Unit,
     onOpenHighRated: () -> Unit,
     onOpenNewBooks: () -> Unit,
-    onOpenMyProfilePage: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("小说 App") },
+                title = { Text("Smooth,圆你读书梦") },
                 actions = {
                     IconButton(onClick = { /* TODO: 实现搜索功能 */ }) {
                         Icon(Icons.Default.Search, contentDescription = "搜索")
